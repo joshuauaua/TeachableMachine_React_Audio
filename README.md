@@ -1,7 +1,3 @@
-Here’s a clearer, more professional version of your README documentation with better structure, grammar, and formatting. I’ve also added headings and notes for clarity:
-
-⸻
-
 🧠 React + Teachable Machine Audio Sample Project
 
 This is a React-based sample project that integrates a Google Teachable Machine audio classification model. It allows users to run a trained audio ML model directly in the browser.
