@@ -1,12 +1,15 @@
+
 import React from "react";
 
 export function RadialClassDistribution({ classScores }) {
+  if (!classScores || typeof classScores !== 'object') return null;
+
   const labels = Object.keys(classScores);
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-md">
-      <h2 className="text-lg font-semibold mb-2">Radial Class Distribution</h2>
-      <div className="relative w-64 h-64 mx-auto">
+    <div>
+      <h2>Radial Class Distribution</h2>
+      <div style={{ position: "relative", width: "200px", height: "200px" }}>
         {labels.map((label, i) => {
           const angle = (i / labels.length) * 2 * Math.PI;
           const radius = classScores[label] * 100;
@@ -23,6 +26,7 @@ export function RadialClassDistribution({ classScores }) {
                 left: `${x}px`,
                 top: `${y}px`,
                 transform: "translate(-50%, -50%)",
+                position: "absolute",
               }}
             >
               {label[0]}

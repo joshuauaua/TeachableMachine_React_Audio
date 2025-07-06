@@ -23,8 +23,8 @@ export default function TimelineGraph({ activations }) {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-semibold mb-2">Class Activations Timeline</h2>
-      <ResponsiveContainer width="100%" height={300}>
+      <h2>Timeline</h2>
+      <ResponsiveContainer width="60%" height={300}>
         <ScatterChart margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
           <XAxis
             dataKey="timestamp"

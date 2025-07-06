@@ -1,10 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import AudioVisualizer from "../components/audio_visualizer.jsx";
-import ImageOverlayVisualizer from "../components/image_overlay_visualizer.jsx";
 import TimelineGraph from "../components/timeline_graph.jsx";
 import { RadialClassDistribution } from "../components/radial_class_distribution.jsx";
 import { SummaryDashboard } from "../components/summary_dashboard.jsx";
-
 
 export default function Home() {
   const [labels, setLabels] = useState([]);
@@ -12,7 +11,6 @@ export default function Home() {
   const [recognizer, setRecognizer] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [activations, setActivations] = useState([]);
-  
 
   useEffect(() => {
     const setupModel = async () => {
@@ -39,19 +37,20 @@ export default function Home() {
   const startListening = () => {
     if (recognizer && !isListening) {
       const startTime = Date.now();
-  
+
       recognizer.listen(
         (result) => {
           const newScores = {};
           recognizer.wordLabels().forEach((label, i) => {
             newScores[label] = result.scores[i];
-  
+
             if (result.scores[i] > 0.5) {
               setActivations((prev) => [
                 ...prev,
                 {
                   timestamp: Date.now() - startTime,
                   label: label,
+                  scores: newScores,
                 },
               ]);
             }
@@ -68,6 +67,7 @@ export default function Home() {
       setIsListening(true);
     }
   };
+
   const stopListening = () => {
     if (recognizer && isListening) {
       recognizer.stopListening();
@@ -79,15 +79,9 @@ export default function Home() {
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Teachable Machine Audio Model</h1>
 
-      <div
-        className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4"
-        role="alert"
-      >
+      <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
         <p className="font-bold">Microphone Permission Required</p>
-        <p>
-          Please allow access to your microphone when prompted. This is required
-          for the model to capture and analyze audio.
-        </p>
+        <p>Please allow access to your microphone when prompted.</p>
       </div>
 
       <div className="flex gap-4 mb-4">
@@ -107,16 +101,12 @@ export default function Home() {
         </button>
       </div>
 
-      {isListening && (
-        <div className="text-green-600 font-semibold mb-2">Listening...</div>
-      )}
+      {isListening && <div className="text-green-600 font-semibold mb-2">Listening...</div>}
 
       <AudioVisualizer scores={scores} labels={labels} />
-
       <TimelineGraph activations={activations} />
-      <ImageOverlayVisualizer scores={scores} />
-
-
+      <RadialClassDistribution classScores={scores} />
+      <SummaryDashboard history={activations} />
     </div>
   );
 }
