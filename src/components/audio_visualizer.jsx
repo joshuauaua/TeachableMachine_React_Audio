@@ -1,9 +1,11 @@
 import React from "react";
+import "./audio_visualizer.css";
 
 export default function AudioVisualizer({ scores, labels }) {
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-xl font-semibold">Live Audio Classification</h2>
+    <>
+    <div className="vis-border">
+      <h2 className="vis-title">Live Audio Classification</h2>
 
       <div className="space-y-2">
         {labels.map((label) => (
@@ -22,5 +24,6 @@ export default function AudioVisualizer({ scores, labels }) {
         ))}
       </div>
     </div>
+    </>
   );
 }

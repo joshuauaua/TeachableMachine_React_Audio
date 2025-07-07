@@ -1,5 +1,6 @@
 
 import React from "react";
+import "./audio_visualizer.css";
 
 export function RadialClassDistribution({ classScores }) {
   if (!classScores || typeof classScores !== 'object') return null;
@@ -7,8 +8,8 @@ export function RadialClassDistribution({ classScores }) {
   const labels = Object.keys(classScores);
 
   return (
-    <div>
-      <h2>Radial Class Distribution</h2>
+    <div className="vis-border">
+      <h2 className="vis-title">Radial Class Distribution</h2>
       <div style={{ position: "relative", width: "200px", height: "200px" }}>
         {labels.map((label, i) => {
           const angle = (i / labels.length) * 2 * Math.PI;

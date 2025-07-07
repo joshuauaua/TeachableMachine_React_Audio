@@ -1,4 +1,6 @@
 import React from "react";
+import "./audio_visualizer.css";
+
 import {
   LineChart,
   Line,
@@ -22,9 +24,9 @@ export default function TimelineGraph({ activations }) {
   });
 
   return (
-    <div className="p-4">
-      <h2>Timeline</h2>
-      <ResponsiveContainer width="60%" height={300}>
+    <div className="vis-border">
+      <h2 className="vis-title">Timeline</h2>
+      <ResponsiveContainer width="95%" height={300}>
         <ScatterChart margin={{ top: 20, right: 30, bottom: 10, left: 10 }}>
           <XAxis
             dataKey="timestamp"

@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState } from "react";
 import AudioVisualizer from "../components/audio_visualizer.jsx";
 import TimelineGraph from "../components/timeline_graph.jsx";
 import { RadialClassDistribution } from "../components/radial_class_distribution.jsx";
 import { SummaryDashboard } from "../components/summary_dashboard.jsx";
+import "../components/audio_visualizer.css";
 
 export default function Home() {
   const [labels, setLabels] = useState([]);
@@ -12,9 +12,11 @@ export default function Home() {
   const [isListening, setIsListening] = useState(false);
   const [activations, setActivations] = useState([]);
 
+
+  //Update const URL with your own URL from Teachable Machine
   useEffect(() => {
     const setupModel = async () => {
-      const URL = "https://teachablemachine.withgoogle.com/models/QGdTnG0wj/";
+      const URL = "https://teachablemachine.withgoogle.com/models/0ujPt5IIA/";
       const checkpointURL = URL + "model.json";
       const metadataURL = URL + "metadata.json";
 
@@ -58,7 +60,7 @@ export default function Home() {
           setScores(newScores);
         },
         {
-          includeSpectrogram: false,
+          includeSpectrogram: true,
           probabilityThreshold: 0.75,
           invokeCallbackOnNoiseAndUnknown: true,
           overlapFactor: 0.5,
@@ -75,33 +77,48 @@ export default function Home() {
     }
   };
 
+
+
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Teachable Machine Audio Model</h1>
+    <div className="tool-body">
 
-      <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4" role="alert">
-        <p className="font-bold">Microphone Permission Required</p>
-        <p>Please allow access to your microphone when prompted.</p>
-      </div>
 
-      <div className="flex gap-4 mb-4">
-        <button
-          onClick={startListening}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-          disabled={isListening}
+      <header className="p-4">
+        <h1 className="text-2xl font-bold mb-4">
+          Teachable Machine Audio Model
+        </h1>
+
+        <div
+          className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4"
+          role="alert"
         >
-          Start
-        </button>
-        <button
-          onClick={stopListening}
-          className="px-4 py-2 bg-red-600 text-white rounded"
-          disabled={!isListening}
-        >
-          Stop
-        </button>
-      </div>
+          <p className="font-bold">Microphone Permission Required</p>
+          <p>Please allow access to your microphone when prompted.</p>
+        </div>
 
-      {isListening && <div className="text-green-600 font-semibold mb-2">Listening...</div>}
+        <div className="flex gap-4 mb-4">
+          <button
+            onClick={startListening}
+            className="px-4 py-2 bg-blue-600 text-white rounded"
+            disabled={isListening}
+          >
+            Start
+          </button>
+
+          <button
+            onClick={stopListening}
+            className="px-4 py-2 bg-red-600 text-white rounded"
+            disabled={!isListening}
+          >
+            Stop
+          </button>
+        </div>
+
+        {isListening && (
+          <div className="text-green-600 font-semibold mb-2">Listening...</div>
+        )}
+      </header>
+
 
       <AudioVisualizer scores={scores} labels={labels} />
       <TimelineGraph activations={activations} />
