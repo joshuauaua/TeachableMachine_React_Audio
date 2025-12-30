@@ -14,11 +14,10 @@ const Footer = () => {
                     </svg>
                     GitHub
                 </a>
-                <a href="https://sonicassembly.com" target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors flex items-center gap-2">
+                <a href="https://sonicassembly.se" target="_blank" rel="noopener noreferrer" className="hover:text-pink-400 transition-colors flex items-center gap-2">
                     Sonic Assembly
                 </a>
             </div>
-            <p className="mt-4 text-xs text-gray-600">© {new Date().getFullYear()} VeloSonics</p>
         </footer>
     );
 };

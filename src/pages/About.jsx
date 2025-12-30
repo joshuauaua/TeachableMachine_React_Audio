@@ -24,6 +24,24 @@ export default function About() {
                 </div>
             </div>
 
+            <h2 className="text-2xl font-bold text-white mt-12 mb-4">Origin Story: The Velosonics Initiative</h2>
+            <p className="text-gray-300 mb-4 leading-relaxed">
+                AudioML was developed as the technical deliverable for <strong>Velosonics</strong>, a conceptual project exploring data-led design in urban logistics.
+            </p>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+                Driven by <a href="https://sonicassembly.se" className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">Sonic Assembly</a> (Sweden) and MoveByBike Italy, the project tested experimental sound design techniques on cargo bikes in Verona, Italy. This code package was created to process the results—validating that spectrogram analysis can fill gaps in current simulation software for engineering and operational planning.
+            </p>
+
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl border border-gray-700 mt-8 shadow-lg">
+                <h3 className="text-lg font-semibold text-white mb-3">Project Support</h3>
+                <p className="text-gray-400 mb-4">
+                    This project was funded and supported by <strong>Creative FLIP</strong>, the <strong>European Commission</strong>, <strong>European Creative Hubs Network</strong>, and the <strong>Goethe Institute</strong>.
+                </p>
+                <div className="text-sm text-gray-500 border-t border-gray-700 pt-4 mt-4">
+                    A collaboration between Sonic Assembly and MoveByBike.
+                </div>
+            </div>
+
             <h2 className="text-2xl font-bold text-white mt-12 mb-4">Credits</h2>
             <p className="mb-4">
                 This project was built using:
