@@ -1,4 +1,5 @@
 import React from "react";
+import { BarChart } from '@mui/x-charts/BarChart';
 import "./audio_visualizer.css";
 
 export function SummaryDashboard({ history, threshold = 0.5 }) {
@@ -15,24 +16,58 @@ export function SummaryDashboard({ history, threshold = 0.5 }) {
   });
 
   const total = Object.values(summary).reduce((a, b) => a + b, 0);
+  
+  // Transform to dataset for MUI Charts
+  const chartData = Object.entries(summary).map(([label, count]) => ({
+      label: label,
+      count: count,
+      percent: parseFloat(((count / total) * 100).toFixed(1))
+  }));
 
   return (
-    <div className="bg-white rounded-xl p-4 shadow-md">
-      <h2 className="text-lg font-semibold mb-2">Session Summary</h2>
-      {Object.entries(summary).map(([label, count]) => {
-        const percent = ((count / total) * 100).toFixed(1);
-        return (
-          <div key={label} className="mb-2">
-            <div className="text-sm font-medium">{label} ({percent}%)</div>
-            <div className="w-full bg-gray-200 h-3 rounded">
-              <div
-                className="bg-green-500 h-3 rounded"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
+    <div className="bg-white rounded-xl p-6 shadow-md w-full">
+      <h2 className="text-xl font-bold mb-4 text-gray-800">Session Summary</h2>
+      
+      {chartData.length > 0 ? (
+          <div className="w-full h-[400px]">
+            <BarChart
+                dataset={chartData}
+                xAxis={[{ 
+                    scaleType: 'band', 
+                    dataKey: 'label',
+                    tickLabelStyle: {
+                        angle: 0,
+                        textAnchor: 'middle',
+                        fontSize: 12
+                    }
+                }]}
+                series={[{ 
+                    dataKey: 'count', 
+                    label: 'Detections',
+                    color: '#3b82f6', // blue-500
+                    valueFormatter: (value) => `${value} detections`
+                }]}
+                yAxis={[{ label: 'Count' }]}
+                height={350}
+                margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
+                slotProps={{
+                    legend: { hidden: false }
+                }}
+            />
           </div>
-        );
-      })}
+      ) : (
+          <p className="text-gray-500 italic">No detections above threshold yet.</p>
+      )}
+      
+      <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {chartData.map((item) => (
+              <div key={item.label} className="bg-gray-100 p-3 rounded-lg text-center">
+                  <div className="font-semibold text-gray-700">{item.label}</div>
+                  <div className="text-2xl font-bold text-blue-600">{item.percent}%</div>
+                  <div className="text-xs text-gray-500">{item.count} detections</div>
+              </div>
+          ))}
+      </div>
     </div>
   );
 }

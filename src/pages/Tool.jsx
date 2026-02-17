@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AudioVisualizer from "../components/audio_visualizer.jsx";
-import TimelineGraph from "../components/timeline_graph.jsx";
+import LiveSpectrogram from "../components/LiveSpectrogram.jsx";
 
 import { SummaryDashboard } from "../components/summary_dashboard.jsx";
 import "../components/audio_visualizer.css";
@@ -25,34 +25,68 @@ export default function Tool() {
   const [recognizer, setRecognizer] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [activations, setActivations] = useState([]);
+  const [modelURL, setModelURL] = useState("https://teachablemachine.withgoogle.com/models/0ujPt5IIA/");
+  const [inputURL, setInputURL] = useState("https://teachablemachine.withgoogle.com/models/0ujPt5IIA/");
+  const [isModelLoading, setIsModelLoading] = useState(false);
+
+  const [modelError, setModelError] = useState(null);
+  const [spectrogramData, setSpectrogramData] = useState(null);
+  const [fullSpectrogramData, setFullSpectrogramData] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
 
 
-  //Update const URL with your own URL from Teachable Machine
+
+  const setupModel = async (url) => {
+    try {
+        setIsModelLoading(true);
+        setModelError(null);
+        
+        // Stop existing recognizer if any
+        if (recognizer) {
+             await recognizer.stopListening();
+             setIsListening(false);
+        }
+
+        const checkpointURL = url + "model.json";
+        const metadataURL = url + "metadata.json";
+
+        const rec = window.speechCommands.create(
+            "BROWSER_FFT",
+            undefined,
+            checkpointURL,
+            metadataURL
+        );
+
+        await rec.ensureModelLoaded();
+        const classLabels = rec.wordLabels();
+        setLabels(classLabels);
+        setRecognizer(rec);
+        setIsModelLoading(false);
+    } catch (err) {
+        console.error("Failed to load model:", err);
+        setModelError("Failed to load model. Please check the URL and try again.");
+        setIsModelLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const setupModel = async () => {
-      const URL = "https://teachablemachine.withgoogle.com/models/0ujPt5IIA/";
-      const checkpointURL = URL + "model.json";
-      const metadataURL = URL + "metadata.json";
+    if (window.speechCommands) setupModel(modelURL);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelURL]);
 
-      const rec = window.speechCommands.create(
-        "BROWSER_FFT",
-        undefined,
-        checkpointURL,
-        metadataURL
-      );
-
-      await rec.ensureModelLoaded();
-      const classLabels = rec.wordLabels();
-      setLabels(classLabels);
-      setRecognizer(rec);
-    };
-
-    if (window.speechCommands) setupModel();
-  }, []);
+  const handleUrlSubmit = (e) => {
+      e.preventDefault();
+      let url = inputURL.trim();
+      if (!url.endsWith('/')) {
+          url += '/';
+      }
+      setModelURL(url);
+  };
 
   const startListening = () => {
     if (recognizer && !isListening) {
       const startTime = Date.now();
+      setFullSpectrogramData([]); // Clear previous data
 
       recognizer.listen(
         (result) => {
@@ -72,6 +106,17 @@ export default function Tool() {
             }
           });
           setScores(newScores);
+          
+          if (result.spectrogram) {
+              setSpectrogramData(result.spectrogram);
+              // Accumulate data: we need to clone it as it might be a typed array view reused by TFJS
+              const frameData = Array.from(result.spectrogram.data);
+              setFullSpectrogramData(prev => [...prev, {
+                  data: frameData,
+                  frameSize: result.spectrogram.frameSize,
+                  timestamp: Date.now() - startTime
+              }]);
+          }
         },
         {
           includeSpectrogram: true,
@@ -80,6 +125,22 @@ export default function Tool() {
           overlapFactor: 0.5,
         }
       );
+      // Hack to get access to spectrogram data per frame if listen() callback doesn't provide it conveniently enough?
+      // Actually recognizer.listen callback receives 'result'.
+      // result.spectrogram is { data: Float32Array, frameSize: number }
+      
+      // We need to hook into the callback properly.
+      // The callback above handles predictions.
+      // To get raw spectrogram data continuously, we might need to check if 'result' has it.
+      // Yes, result.spectrogram should be there.
+      
+      // Let's wrap the callback to ensure we extract it.
+      // The current callback:
+      // (result) => { ... }
+      
+      // I'll update the callback in the previous chunk.
+      // Wait, I can't easily replace the *inside* of the callback without replacing the whole block.
+      // Let's replace the whole startListening function to be safe and clean.
       setIsListening(true);
     }
   };
@@ -89,6 +150,39 @@ export default function Tool() {
       recognizer.stopListening();
       setIsListening(false);
     }
+  };
+
+
+  const handleSaveRecording = async () => {
+        if (fullSpectrogramData.length === 0) return;
+
+        setIsSaving(true);
+        try {
+            const response = await fetch('http://localhost:3001/api/recordings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    modelName: modelURL,
+                    classes: labels,
+                    spectrogramData: fullSpectrogramData
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save recording');
+            }
+
+            const data = await response.json();
+            alert(`Recording saved! ID: ${data.id}`);
+            // Optional: Clear data or keep it?
+        } catch (error) {
+            console.error('Error saving recording:', error);
+            alert('Failed to save recording. Is the backend server running?');
+        } finally {
+            setIsSaving(false);
+        }
   };
 
   return (
@@ -101,6 +195,46 @@ export default function Tool() {
       
       {/* Main Content Wrapper */}
       <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col gap-8">
+
+        {/* Custom Model Input */}
+         <div className="bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-700">
+            <h2 className="text-xl font-bold text-white mb-4">Model Configuration</h2>
+            <form onSubmit={handleUrlSubmit} className="flex flex-col md:flex-row gap-4">
+                <div className="flex-grow">
+                     <label htmlFor="model-url" className="sr-only">Teachable Machine Model URL</label>
+                    <input
+                        type="text"
+                        id="model-url"
+                        value={inputURL}
+                        onChange={(e) => setInputURL(e.target.value)}
+                        placeholder="Paste your Teachable Machine model URL here..."
+                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={isModelLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                    {isModelLoading ? "Loading Model..." : "Load Model"}
+                </button>
+            </form>
+            {modelError && (
+                <div className="mt-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-200 text-sm">
+                    {modelError}
+                </div>
+            )}
+             {!modelError && !isModelLoading && labels.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="text-gray-400 text-sm py-1">Loaded classes:</span>
+                    {labels.map(label => (
+                        <span key={label} className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded-md border border-gray-600">
+                            {label}
+                        </span>
+                    ))}
+                </div>
+            )}
+        </div>
 
         {/* Top Split Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -120,9 +254,22 @@ export default function Tool() {
                     {isListening ? <StopIcon /> : <MicIcon />}
             </button>
             
-            <div className={`mt-6 font-semibold px-4 py-1 rounded-full text-sm ${isListening ? 'bg-red-900/30 text-red-400 border border-red-900/50' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}>
-                    {isListening ? "RECORDING ACTIVE" : "READY TO RECORD"}
+            <div className={`mt-6 font-semibold px-4 py-1 rounded-full text-sm ${isSaving ? 'bg-yellow-900/30 text-yellow-400 border border-yellow-900/50' : isListening ? 'bg-red-900/30 text-red-400 border border-red-900/50' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}>
+                    {isSaving ? "SAVING..." : isListening ? "RECORDING ACTIVE" : "READY TO RECORD"}
             </div>
+            
+            {!isListening && fullSpectrogramData.length > 0 && (
+                <button
+                    onClick={handleSaveRecording}
+                    disabled={isSaving}
+                    className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center gap-2"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                    </svg>
+                    Save Recording
+                </button>
+            )}
             </div>
 
             {/* Right: Live Dashboard Cards */}
@@ -139,7 +286,9 @@ export default function Tool() {
                 <div className="bg-gray-800/80 backdrop-blur-md rounded-xl shadow-md p-4 col-span-1 md:col-span-2 border border-gray-700">
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Live Timeline</h3>
                     <div className="flex items-center justify-center h-full min-h-[200px] overflow-hidden rounded-lg bg-gray-900/50 border border-gray-700/50">
-                        <TimelineGraph activations={activations} />
+                    <div className="flex items-center justify-center h-full min-h-[200px] overflow-hidden rounded-lg bg-gray-900/50 border border-gray-700/50">
+                        <LiveSpectrogram spectrogramData={spectrogramData} />
+                    </div>
                     </div>
                 </div>
             </div>
