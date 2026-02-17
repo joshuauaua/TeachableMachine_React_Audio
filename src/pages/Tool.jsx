@@ -33,6 +33,7 @@ export default function Tool() {
   const [spectrogramData, setSpectrogramData] = useState(null);
   const [fullSpectrogramData, setFullSpectrogramData] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
 
 
@@ -61,7 +62,9 @@ export default function Tool() {
         const classLabels = rec.wordLabels();
         setLabels(classLabels);
         setRecognizer(rec);
+        setRecognizer(rec);
         setIsModelLoading(false);
+        setIsModalOpen(false); // Close modal on success
     } catch (err) {
         console.error("Failed to load model:", err);
         setModelError("Failed to load model. Please check the URL and try again.");
@@ -193,48 +196,101 @@ export default function Tool() {
         <div className="absolute -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-blue-600 rounded-full blur-[150px] opacity-20 animate-pulse"></div>
       </div>
       
+      {/* Top Navigation Bar */}
+      <div className="absolute top-6 right-6 z-50">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-md text-white px-4 py-2 rounded-lg border border-gray-600 shadow-lg flex items-center gap-2 transition-all hover:scale-105"
+          >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              Load Custom Model
+          </button>
+      </div>
+
       {/* Main Content Wrapper */}
       <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col gap-8">
 
-        {/* Custom Model Input */}
-         <div className="bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-6 border border-gray-700">
-            <h2 className="text-xl font-bold text-white mb-4">Model Configuration</h2>
-            <form onSubmit={handleUrlSubmit} className="flex flex-col md:flex-row gap-4">
-                <div className="flex-grow">
-                     <label htmlFor="model-url" className="sr-only">Teachable Machine Model URL</label>
-                    <input
-                        type="text"
-                        id="model-url"
-                        value={inputURL}
-                        onChange={(e) => setInputURL(e.target.value)}
-                        placeholder="Paste your Teachable Machine model URL here..."
-                        className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    />
+        {/* Modal Overlay */}
+        {isModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg border border-gray-700 overflow-hidden transform transition-all scale-100 opacity-100">
+                    <div className="p-6 border-b border-gray-700 flex justify-between items-center">
+                        <h2 className="text-xl font-bold text-white">Load Custom Model</h2>
+                        <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div className="p-6">
+                        <p className="text-gray-400 text-sm mb-4">
+                            Paste the URL of your trained sound model from <a href="https://teachablemachine.withgoogle.com/" target="_blank" rel="noreferrer" className="text-blue-400 hover:text-blue-300 underline">Teachable Machine</a>.
+                        </p>
+                        
+                        <form onSubmit={handleUrlSubmit} className="flex flex-col gap-4">
+                            <div>
+                                <label htmlFor="model-url" className="sr-only">Model URL</label>
+                                <input
+                                    type="text"
+                                    id="model-url"
+                                    value={inputURL}
+                                    onChange={(e) => setInputURL(e.target.value)}
+                                    placeholder="https://teachablemachine.withgoogle.com/models/..."
+                                    className="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+                            
+                            {modelError && (
+                                <div className="p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-200 text-sm">
+                                    {modelError}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 justify-end mt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="px-4 py-2 text-gray-300 hover:text-white"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isModelLoading}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {isModelLoading && (
+                                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    )}
+                                    {isModelLoading ? "Loading..." : "Load Model"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <button
-                    type="submit"
-                    disabled={isModelLoading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                    {isModelLoading ? "Loading Model..." : "Load Model"}
-                </button>
-            </form>
-            {modelError && (
-                <div className="mt-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-200 text-sm">
-                    {modelError}
-                </div>
-            )}
-             {!modelError && !isModelLoading && labels.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="text-gray-400 text-sm py-1">Loaded classes:</span>
-                    {labels.map(label => (
-                        <span key={label} className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded-md border border-gray-600">
+            </div>
+        )}
+
+        {/* Active Model Info Bar (Optional) */}
+        {labels.length > 0 && !isModalOpen && (
+             <div className="w-full text-center fade-in">
+                <span className="text-gray-400 text-sm">Active Model: </span>
+                <span className="text-blue-400 text-sm font-medium ml-1 truncate max-w-md inline-block align-bottom">{modelURL}</span>
+                <div className="flex justify-center flex-wrap gap-2 mt-2">
+                     {labels.map(label => (
+                        <span key={label} className="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded-md border border-gray-700">
                             {label}
                         </span>
                     ))}
                 </div>
-            )}
-        </div>
+             </div>
+        )}
 
         {/* Top Split Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

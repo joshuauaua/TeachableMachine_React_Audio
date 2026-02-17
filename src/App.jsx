@@ -21,7 +21,6 @@ export default function App() {
                     </div>
                     <div className="hidden md:block">
                         <div className="ml-10 flex items-baseline space-x-4">
-                            <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/5 hover:text-blue-400 transition-colors">Home</Link>
                             <Link to="/tool" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/5 hover:text-blue-400 transition-colors">Tool</Link>
                             <Link to="/documentation" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/5 hover:text-blue-400 transition-colors">Docs</Link>
                             <Link to="/about" className="px-3 py-2 rounded-md text-sm font-medium hover:bg-white/5 hover:text-blue-400 transition-colors">About</Link>
@@ -32,7 +31,7 @@ export default function App() {
         </nav>
 
         {/* Main Content Area */}
-        <main className="flex-grow pt-16">
+        <main className="flex-grow pt-16 flex flex-col">
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/tool" element={<Tool />} />
