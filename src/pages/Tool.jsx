@@ -197,22 +197,11 @@ export default function Tool() {
         <div className="absolute -bottom-[20%] -right-[10%] w-[50%] h-[50%] bg-blue-600 rounded-full blur-[150px] opacity-20 animate-pulse"></div>
       </div>
       
-      {/* Top Navigation Bar - Keep Load Model button accessible */}
-      <div className="absolute top-6 right-6 z-50">
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="bg-gray-800/80 hover:bg-gray-700/80 backdrop-blur-md text-white px-4 py-2 rounded-lg border border-gray-600 shadow-lg flex items-center gap-2 transition-all hover:scale-105"
-          >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-              </svg>
-              Load Custom Model
-          </button>
-      </div>
+
 
       <div className="flex flex-1 h-full overflow-hidden relative z-10">
         {/* Sidebar */}
-        <aside className="w-64 bg-gray-900/50 backdrop-blur-md border-r border-white/10 flex flex-col p-4 hidden md:flex">
+        <aside className="w-64 bg-gray-900/50 backdrop-blur-md border-r border-white/10 flex-col p-4 hidden md:flex">
             <div className="mb-8 px-2">
                 <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Toolbox</h2>
             </div>
@@ -344,6 +333,16 @@ export default function Tool() {
                                 <p className="text-gray-400 text-sm">Real-time audio classification</p>
                             </div>
 
+                            <div className="flex flex-col md:flex-row items-end md:items-center gap-4">
+                                <button 
+                                    onClick={() => setIsModalOpen(true)}
+                                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg border border-gray-600 shadow-sm flex items-center gap-2 transition-all text-sm font-medium"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                    </svg>
+                                    Load Model
+                                </button>
                             {/* Active Model Badge */}
                             {labels.length > 0 && (
                                 <div className="flex flex-col items-end gap-2">
@@ -360,6 +359,7 @@ export default function Tool() {
                                     </div>
                                 </div>
                             )}
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
