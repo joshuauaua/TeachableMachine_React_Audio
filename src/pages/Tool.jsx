@@ -36,6 +36,11 @@ export default function Tool() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('live');
 
+  // New state for model details
+  const [modelTopology, setModelTopology] = useState(null);
+  const [modelMetadata, setModelMetadata] = useState(null);
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+
 
 
   const setupModel = async (url) => {
@@ -65,7 +70,30 @@ export default function Tool() {
         setRecognizer(rec);
         setRecognizer(rec);
         setIsModelLoading(false);
+        setIsModelLoading(false);
         setIsModalOpen(false); // Close modal on success
+
+        // Fetch model details (metadata and topology) for display
+        setIsFetchingDetails(true);
+        try {
+            const [topoRes, metaRes] = await Promise.all([
+                fetch(checkpointURL),
+                fetch(metadataURL)
+            ]);
+            
+            if (topoRes.ok) {
+                const topoJson = await topoRes.json();
+                setModelTopology(topoJson);
+            }
+            if (metaRes.ok) {
+                const metaJson = await metaRes.json();
+                setModelMetadata(metaJson);
+            }
+        } catch (fetchErr) {
+            console.error("Failed to fetch model details:", fetchErr);
+        } finally {
+            setIsFetchingDetails(false);
+        }
     } catch (err) {
         console.error("Failed to load model:", err);
         setModelError("Failed to load model. Please check the URL and try again.");
@@ -234,6 +262,38 @@ export default function Tool() {
                     </svg>
                     <span className="font-medium">Session Analytics</span>
                 </button>
+
+                <div className="pt-4 pb-2">
+                    <div className="h-px bg-white/10 mx-4"></div>
+                </div>
+
+                <button
+                    onClick={() => setActiveTab('topology')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        activeTab === 'topology' 
+                        ? 'bg-emerald-600 shadow-lg shadow-emerald-900/50 text-white' 
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+                    </svg>
+                    <span className="font-medium">Model Topology</span>
+                </button>
+
+                <button
+                    onClick={() => setActiveTab('metadata')}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                        activeTab === 'metadata' 
+                        ? 'bg-amber-600 shadow-lg shadow-amber-900/50 text-white' 
+                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    <span className="font-medium">Model Metadata</span>
+                </button>
             </nav>
         </aside>
 
@@ -246,10 +306,21 @@ export default function Tool() {
                 Live
             </button>
             <button 
-                onClick={() => setActiveTab('analytics')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'analytics' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400'}`}
             >
                 Analytics
+            </button>
+            <button 
+                onClick={() => setActiveTab('topology')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'topology' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+            >
+                Topology
+            </button>
+            <button 
+                onClick={() => setActiveTab('metadata')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${activeTab === 'metadata' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400'}`}
+            >
+                Metadata
             </button>
         </div>
 
@@ -432,7 +503,81 @@ export default function Tool() {
                                 <p className="text-gray-400">Post-analysis summary of classified audio events</p>
                             </div>
                         </div>
-                        <SummaryDashboard history={activations} />
+                    </div>
+                )}
+
+
+                {/* Tab Content: Model Topology */}
+                {activeTab === 'topology' && (
+                     <div className="bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-8 border border-gray-700 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col h-[calc(100vh-140px)]">
+                        <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">Model Topology</h2>
+                                <p className="text-gray-400">Architecture definition (model.json)</p>
+                            </div>
+                            <div className="bg-emerald-900/30 text-emerald-400 px-3 py-1 rounded-lg border border-emerald-900/50 text-sm">
+                                Read-Only
+                            </div>
+                        </div>
+                        
+                        <div className="flex-1 overflow-hidden rounded-xl border border-gray-700 bg-[#0d1117] relative">
+                             {isFetchingDetails ? (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                     <div className="flex flex-col items-center gap-3">
+                                        <svg className="animate-spin h-8 w-8 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span className="text-gray-400 text-sm">Fetching model.json...</span>
+                                     </div>
+                                </div>
+                             ) : modelTopology ? (
+                                <pre className="p-4 text-xs md:text-sm font-mono text-gray-300 overflow-auto h-full w-full">
+                                    {JSON.stringify(modelTopology, null, 2)}
+                                </pre>
+                             ) : (
+                                 <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                                     No topology data available.
+                                 </div>
+                             )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Tab Content: Model Metadata */}
+                {activeTab === 'metadata' && (
+                     <div className="bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-8 border border-gray-700 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col h-[calc(100vh-140px)]">
+                        <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                            <div>
+                                <h2 className="text-2xl font-bold text-white">Model Metadata</h2>
+                                <p className="text-gray-400">Labels and training info (metadata.json)</p>
+                            </div>
+                             <div className="bg-amber-900/30 text-amber-400 px-3 py-1 rounded-lg border border-amber-900/50 text-sm">
+                                Read-Only
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-hidden rounded-xl border border-gray-700 bg-[#0d1117] relative">
+                             {isFetchingDetails ? (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                     <div className="flex flex-col items-center gap-3">
+                                        <svg className="animate-spin h-8 w-8 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span className="text-gray-400 text-sm">Fetching metadata.json...</span>
+                                     </div>
+                                </div>
+                             ) : modelMetadata ? (
+                                <pre className="p-4 text-xs md:text-sm font-mono text-gray-300 overflow-auto h-full w-full">
+                                    {JSON.stringify(modelMetadata, null, 2)}
+                                </pre>
+                             ) : (
+                                 <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                                     No metadata available.
+                                 </div>
+                             )}
+                        </div>
                     </div>
                 )}
 
