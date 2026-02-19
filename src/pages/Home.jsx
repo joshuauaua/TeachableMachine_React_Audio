@@ -39,7 +39,7 @@ const Home = () => {
             </Link>
 
             <Link
-            to="/docs"
+            to="/documentation"
             className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-800/80 backdrop-blur-sm border border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600 hover:bg-gray-700 hover:border-gray-500 hover:shadow-lg hover:-translate-y-1 w-full sm:w-auto"
             >
             <span>Documentation</span>
